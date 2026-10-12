@@ -34,10 +34,11 @@ _U64_MASK = (1 << 64) - 1
 
 
 # --------------------------------------------------------------------------- #
-# varint (LEB128 of the zig-zag encoding, 64-bit domain)
+# varints: unsigned LEB128 for lengths, zig-zag LEB128 for signed integers
 # --------------------------------------------------------------------------- #
 
 def _write_varint(out: bytearray, n: int) -> None:
+    """Signed 64-bit value as zig-zag LEB128."""
     z = (n << 1) ^ (n >> 63)
     while True:
         b = z & 0x7F
@@ -63,6 +64,31 @@ def _read_varint(buf: Sequence[int], off: int) -> Tuple[int, int]:
     return (result >> 1) ^ -(result & 1), off
 
 
+def _write_uvarint(out: bytearray, n: int) -> None:
+    """Unsigned value (lengths) as plain LEB128."""
+    while True:
+        b = n & 0x7F
+        n >>= 7
+        if n:
+            out.append(b | 0x80)
+        else:
+            out.append(b)
+            return
+
+
+def _read_uvarint(buf: Sequence[int], off: int) -> Tuple[int, int]:
+    result = 0
+    shift = 0
+    while True:
+        b = buf[off]
+        off += 1
+        result |= (b & 0x7F) << shift
+        if not (b & 0x80):
+            break
+        shift += 7
+    return result, off
+
+
 # --------------------------------------------------------------------------- #
 # record serialization
 # --------------------------------------------------------------------------- #
@@ -84,12 +110,12 @@ def _append_value(out: bytearray, v: Any) -> None:
     elif isinstance(v, str):
         raw = v.encode("utf-8")
         out.append(TAG_TEXT)
-        _write_varint(out, len(raw))
+        _write_uvarint(out, len(raw))
         out += raw
     elif isinstance(v, (bytes, bytearray, memoryview)):
         raw = bytes(v)
         out.append(TAG_BLOB)
-        _write_varint(out, len(raw))
+        _write_uvarint(out, len(raw))
         out += raw
     else:
         raise TypeMismatchError(f"cannot store value of Python type {type(v).__name__}")
@@ -111,10 +137,10 @@ def deserialize_value(buf: Sequence[int], off: int = 0) -> Tuple[Any, int]:
     if tag == TAG_FLOAT:
         return struct.unpack_from(">d", buf, off)[0], off + 8
     if tag == TAG_TEXT:
-        n, off = _read_varint(buf, off)
+        n, off = _read_uvarint(buf, off)
         return bytes(buf[off:off + n]).decode("utf-8"), off + n
     if tag == TAG_BLOB:
-        n, off = _read_varint(buf, off)
+        n, off = _read_uvarint(buf, off)
         return bytes(buf[off:off + n]), off + n
     raise ValueError(f"corrupt record: unknown type tag {tag}")
 

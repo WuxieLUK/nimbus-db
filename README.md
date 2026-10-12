@@ -2,6 +2,11 @@
 
 **A SQL database engine built from scratch in pure Python — zero dependencies.**
 
+[![CI](https://github.com/WuxieLUK/nimbus-db/actions/workflows/ci.yml/badge.svg)](https://github.com/WuxieLUK/nimbus-db/actions/workflows/ci.yml)
+![tests](https://img.shields.io/badge/tests-138%20passing-brightgreen)
+![python](https://img.shields.io/badge/python-3.10%2B-blue)
+![license](https://img.shields.io/badge/license-MIT-lightgrey)
+
 ```
 lexer → parser → planner → executor
                       ↓
@@ -28,6 +33,31 @@ understand — and demonstrate — every layer of a real OLTP database:
 No third-party packages. No `sqlite3`. Python ≥ 3.10.
 
 ---
+
+## Demos (2 minutes)
+
+```bash
+python demo/tour.py         # 7-stop engine tour: index plans, joins,
+                            # DDL rollback, overflow pages, nimbus_master
+python demo/crash_demo.py   # hard-kills a writer mid-transaction, then
+                            # proves committed data survived and the
+                            # torn transaction did not
+```
+
+The crash demo spawns a real child process, lets it commit 1 000 rows, start
+a second transaction with 500 more — and `kill`s it before commit:
+
+```
+  writer  process killed (returncode 1)
+  reopening the database after the crash ...
+  committed rows survived : 1000 (expected 1000)
+  in-flight rows lost     : 0   (expected 0)
+  RESULT: DURABLE - committed data survived the crash,
+          the torn transaction was dropped.
+```
+
+`docs/FORMAT.md` documents the on-disk format byte-by-byte (with real
+hexdumps), in the spirit of the [SQLite file format docs](https://sqlite.org/fileformat2.html).
 
 ## Quick start
 
@@ -169,15 +199,16 @@ whole affected page (correctness first). See *Design trade-offs* below.
 ## Testing
 
 ```bash
-python -m pytest tests/ -q     # 137 tests
+python -m pytest tests/ -q     # 138 tests
 ```
 
 The suite covers the parser (precedence, escapes, malformed SQL), value
-semantics (three-valued logic, LIKE, affinity), B+trees (5 000-key shuffled
+semantics (three-valued logic, LIKE, affinity), B+trees (3 000-key shuffled
 inserts with incremental verification, delete rebalancing, overflow chains,
 freelist reuse), the WAL (torn-write recovery, checkpoints), full SQL surface,
 and crash-durability scenarios — including killing a session mid-write and
-reopening.
+reopening. CI runs the same suite on Linux, Windows and macOS across Python
+3.10–3.13, plus both demos.
 
 ## Project layout
 
@@ -188,7 +219,9 @@ nimbus_db/
     catalog.py                            schema (stored in-db)
     btree.py  pager.py  values.py         storage engine
     db.py  cli.py  __main__.py            facade & shell
-tests/        137 pytest tests
+tests/        138 pytest tests
+demo/         tour.py (engine tour), crash_demo.py (durability proof)
+docs/         FORMAT.md (on-disk format, byte-level)
 benchmarks/   bench.py  (vs sqlite3)
 examples/     quickstart.py
 ```
