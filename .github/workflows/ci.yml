@@ -28,10 +28,5 @@ jobs:
           python demo/crash_demo.py
           python examples/quickstart.py
       - name: Benchmark smoke (tiny run)
-        run: python -c "
-          import sys; sys.path.insert(0, '.')
-          from benchmarks.bench import bench_nimbus
-          import tempfile, os
-          r = bench_nimbus(tempfile.mkdtemp())
-          assert all(v >= 0 for v in r.values())
-          "
+        run: |
+          python -c "import sys, tempfile; sys.path.insert(0, '.'); from benchmarks.bench import bench_nimbus; r = bench_nimbus(tempfile.mkdtemp()); assert all(v >= 0 for v in r.values()); print('bench smoke ok')"
