@@ -2,7 +2,7 @@
 
 **A SQL database engine built from scratch in pure Python — zero dependencies.**
 
-[![CI](https://github.com/WuxieLUK/nimbus-db/actions/workflows/ci.yml/badge.svg)](https://github.com/WuxieLUK/nimbus-db/actions/workflows/ci.yml)
+[![CI](https://github.com/EAnge1o/nimbus-db/actions/workflows/ci.yml/badge.svg)](https://github.com/EAnge1o/nimbus-db/actions/workflows/ci.yml)
 ![tests](https://img.shields.io/badge/tests-138%20passing-brightgreen)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)

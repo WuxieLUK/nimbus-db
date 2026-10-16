@@ -9,7 +9,7 @@ description = "A SQL database engine built from scratch in pure Python: parser, 
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "WuxieLUK" }]
+authors = [{ name = "EAnge1o" }]
 keywords = ["database", "sql", "btree", "wal", "sqlite", "from-scratch", "educational"]
 classifiers = [
     "Development Status :: 4 - Beta",
